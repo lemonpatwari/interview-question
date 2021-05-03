@@ -17,7 +17,12 @@ class ProductController extends Controller
      */
     public function index()
     {
-        return view('products.index');
+        $products = Product::with('productVariants','productVariants.productVariantPrice', 'productPrice', 'productVariants.variantDetails')->take(1)->get();
+//        dd($products);
+
+        return view('products.index', [
+            'products' => Product::with('productVariants','productVariants.productVariantPrice', 'productVariants.variantDetails')->paginate(5)
+        ]);
     }
 
     /**
