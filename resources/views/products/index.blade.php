@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+@push('style')
+    <link href="{{ asset('select2/select2.min.css') }}" rel="stylesheet"/>
+@endpush
+
 @section('content')
 
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -8,15 +12,30 @@
 
 
     <div class="card">
-        <form action="" method="get" class="card-header">
+        <form action="{{ route('product.index') }}" method="get" class="card-header">
             <div class="form-row justify-content-between">
 
                 <div class="col-md-2">
-                    <input type="text" name="title" placeholder="Product Title" class="form-control">
+                    <input type="text" name="title" value="{{ \Request::get('title') ?? '' }}"
+                           placeholder="Product Title" class="form-control">
                 </div>
 
                 <div class="col-md-2">
-                    <select name="variant" id="" class="form-control">
+
+                    <select name="variantId" id="variantId" class="form-control select2">
+
+                        @foreach($variants as $variant)
+
+                            <option value="" selected disabled hidden>select one</option>
+
+                            <optgroup label="{{ $variant->title }}">
+                                @foreach($variant->productVariants as $productVariant)
+                                    <option
+                                        value="{{ $productVariant->id }}" {{ (\Request::get('variantId') == $productVariant->id) ? 'selected' : '' }}>{{ $productVariant->variant }}</option>
+                                @endforeach
+                            </optgroup>
+
+                        @endforeach
 
                     </select>
                 </div>
@@ -26,14 +45,15 @@
                         <div class="input-group-prepend">
                             <span class="input-group-text">Price Range</span>
                         </div>
-                        <input type="text" name="price_from" aria-label="First name" placeholder="From"
+                        <input type="text" name="price"  value="{{ \Request::get('price') ?? '' }}" aria-label="price_from" placeholder="500-600"
                                class="form-control">
-                        <input type="text" name="price_to" aria-label="Last name" placeholder="To" class="form-control">
+{{--                        <input type="text" name="price_to" aria-label="Last name" placeholder="To" class="form-control">--}}
                     </div>
                 </div>
 
                 <div class="col-md-2">
-                    <input type="date" name="date" placeholder="Date" class="form-control">
+                    <input type="date" name="date" value="{{ \Request::get('date') ?? '' }}" placeholder="Date"
+                           class="form-control">
                 </div>
 
                 <div class="col-md-1">
@@ -58,7 +78,7 @@
                     <tbody>
 
 
-                    @forelse($products as $product)
+                    @forelse($products as $key=>$product)
 
                         <tr>
                             <td>{{ $loop->iteration }}</td>
@@ -66,7 +86,7 @@
                                 {{ \Carbon\Carbon::parse($product->created_at)->format('d-M-Y') }}</td>
                             <td>{!! $product->description !!}</td>
                             <td>
-                                <dl class="row mb-0" style="height: 80px; overflow: hidden" id="variant">
+                                <dl class="row mb-0" style="height: 80px; overflow: hidden" class="variant{{ $key }}">
                                     @foreach($product->productVariants as $productVariant)
                                         <dt class="col-sm-3 pb-0">
 
@@ -87,7 +107,7 @@
                                     @endforeach
 
                                 </dl>
-                                <button onclick="$('#variant').toggleClass('h-auto')" class="btn btn-sm btn-link">Show
+                                <button onclick="$('.variant{{ $key }}').toggleClass('h-auto')" class="btn btn-sm btn-link">Show
                                     more
                                 </button>
                             </td>
@@ -114,10 +134,9 @@
         <div class="card-footer">
             <div class="row justify-content-between">
 
-
-
                 <div class="col-md-6">
-                    <p>Showing {{ $products->firstItem() ?? '' }} to {{ $products->lastItem() }} out of {{ $products->total() }}</p>
+                    <p>Showing {{ $products->firstItem() ?? '' }} to {{ $products->lastItem() }} out
+                        of {{ $products->total() }}</p>
                 </div>
                 <div class="col-md-2">
                     {{ $products->links() }}
@@ -127,3 +146,13 @@
     </div>
 
 @endsection
+
+@push('script')
+    <script src="{{ asset('select2/select2.min.js') }}"></script>
+    <script>
+        // In your Javascript (external .js resource or <script> tag)
+        $(document).ready(function () {
+            $('.select2').select2();
+        });
+    </script>
+@endpush
