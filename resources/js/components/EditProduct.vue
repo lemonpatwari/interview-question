@@ -26,82 +26,103 @@
                     </div>
                 </div>
 
-                <!--                <div class="card shadow mb-4">
-                                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                        <h6 class="m-0 font-weight-bold text-primary">Media</h6>
-                                    </div>
-                                    <div class="card-body border">
-                                        <vue-dropzone ref="myVueDropzone" id="dropzone" :options="dropzoneOptions"></vue-dropzone>
-                                    </div>
-                                </div>-->
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                        <h6 class="m-0 font-weight-bold text-primary">Media</h6>
+                    </div>
+
+                    <div class="px-4 py-2">
+                        <input type="file" id="file_input" class="" name="file[]" multiple="multiple"
+                               v-on:change="fileValidationCheck"
+                               accept="image/*">
+
+                        <br>
+                        <span class="text-danger">File extension must be jpg,png and upload size 1024KB</span> <br>
+
+                        <div>
+                            <ul>
+                                <li v-for="(productImage ,index) in this.productImages">
+                                    <img :src="productImage.file_path" alt=""
+                                         style="width: 80px;">
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!--                    <div class="card-body border">
+                                            <vue-dropzone ref="myVueDropzone" id="dropzone" :options="dropzoneOptions"></vue-dropzone>
+                                        </div>-->
+                </div>
             </div>
 
-            <!--            <div class="col-md-6">
-                            <div class="card shadow mb-4">
-                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                    <h6 class="m-0 font-weight-bold text-primary">Variants</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row" v-for="(item,index) in product_variant">
-                                        <div class="col-md-4">
-                                            <div class="form-group">
-                                                <label for="">Option</label>
-                                                <select v-model="item.option" class="form-control">
-                                                    <option v-for="variant in variants"
-                                                            :value="variant.id">
-                                                        {{ variant.title }}
-                                                    </option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-8">
-                                            <div class="form-group">
-                                                <label v-if="product_variant.length != 1"
-                                                       @click="product_variant.splice(index,1); checkVariant"
-                                                       class="float-right text-primary"
-                                                       style="cursor: pointer;">Remove</label>
-                                                <label v-else for="">.</label>
-                                                <input-tag v-model="item.tags" @input="checkVariant"
-                                                           class="form-control"></input-tag>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="card-footer"
-                                     v-if="product_variant.length < variants.length && product_variant.length < 3">
-                                    <button @click="newVariant" class="btn btn-primary">Add another option</button>
-                                </div>
+            <div class="col-md-6">
+                <div class="card shadow mb-4">
 
-                                <div class="card-header text-uppercase">Preview</div>
-                                <div class="card-body">
-                                    <div class="table-responsive">
-                                        <table class="table">
-                                            <thead>
-                                            <tr>
-                                                <td>Variant</td>
-                                                <td>Price</td>
-                                                <td>Stock</td>
-                                            </tr>
-                                            </thead>
-                                            <tbody>
-                                            <tr v-for="variant_price in product_variant_prices">
-                                                <td>{{ variant_price.title }}</td>
-                                                <td>
-                                                    <input type="text" class="form-control" v-model="variant_price.price">
-                                                </td>
-                                                <td>
-                                                    <input type="text" class="form-control" v-model="variant_price.stock">
-                                                </td>
-                                            </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
+                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                        <h6 class="m-0 font-weight-bold text-primary">Variants</h6>
+                    </div>
 
-                                    <small v-if="errors.product_variant_prices" class="text-danger with-errors"
-                                           v-html="errors.product_variant_prices[0]"></small>
+                    <div class="card-body">
+                        <div class="row" v-for="(item,index) in product_variant">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="">Option</label>
+                                    <select v-model="item.option" class="form-control">
+                                        <option v-for="variant in variants"
+                                                :value="variant.id">
+                                            {{ variant.title }}
+                                        </option>
+                                    </select>
                                 </div>
                             </div>
-                        </div>-->
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label v-if="product_variant.length != 1"
+                                           @click="product_variant.splice(index,1); checkVariant"
+                                           class="float-right text-primary"
+                                           style="cursor: pointer;">Remove</label>
+                                    <label v-else for="">.</label>
+                                    <input-tag v-model="item.tags" @input="checkVariant"
+                                               class="form-control"></input-tag>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer"
+                         v-if="product_variant.length < variants.length && product_variant.length < 3">
+                        <button @click="newVariant" class="btn btn-primary">Add another option</button>
+                    </div>
+
+                    <div class="card-header text-uppercase">Preview</div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                <tr>
+                                    <td>Variant</td>
+                                    <td>Price</td>
+                                    <td>Stock</td>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr v-for="variant_price in product_variant_prices">
+                                    <td>{{ variant_price.title }}</td>
+                                    <td>
+                                        <input type="text" class="form-control" v-model="variant_price.price">
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control" v-model="variant_price.stock">
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <small v-if="errors.product_variant_prices" class="text-danger with-errors"
+                               v-html="errors.product_variant_prices[0]"></small>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <span>{{ message }}</span> <br>
@@ -153,6 +174,7 @@ export default {
             },
             errors: '',
             message: '',
+            productImages: ''
         }
     },
     methods: {
@@ -201,24 +223,40 @@ export default {
 
 
         fillData() {
+
             this.id = this.product.id;
             this.product_name = this.product.title;
             this.product_sku = this.product.sku;
             this.description = this.product.description;
+            this.productImages = this.product.product_images;
 
         },
 
         updateProduct() {
-            let product = {
-                title: this.product_name,
-                sku: this.product_sku,
-                description: this.description,
+
+            var formData = new FormData();
+            var filesLength = document.getElementById('file_input').files.length;
+            for (var i = 0; i < filesLength; i++) {
+                formData.append("file[]", document.getElementById('file_input').files[i]);
             }
 
-            axios.put(`/product/${this.id}`, product).then(response => {
+            formData.append('title', this.product_name);
+            formData.append('sku', this.product_sku);
+            formData.append('description', this.description);
+            formData.append('_method', 'PUT');
+
+            // formData.append('product_variant', JSON.stringify(this.product_variant));
+            // formData.append('product_variant_prices', JSON.stringify(this.product_variant_prices));
+
+            axios.post(`/product/${this.id}`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                },
+            }).then(response => {
+
+                window.location.reload();
 
                 this.message = response.data.msg;
-
 
             }).catch(error => {
                 if (error.response.data) {
@@ -226,8 +264,23 @@ export default {
                 }
             })
 
-        }
+        },
 
+        fileValidationCheck() {
+
+            var formData = new FormData();
+            var filesLength = document.getElementById('file_input').files.length;
+            for (var i = 0; i < filesLength; i++) {
+
+                var FileSize = document.getElementById('file_input').files[i].size / 1024 / 1024; // in MiB
+                if (FileSize > 1) {
+                    alert('File max size must be 1024KB');
+                    $("#file_input").val('');
+                    return false;
+                }
+
+            }
+        }
 
     },
     mounted() {

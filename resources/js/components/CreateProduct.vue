@@ -29,9 +29,21 @@
                     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                         <h6 class="m-0 font-weight-bold text-primary">Media</h6>
                     </div>
-                    <div class="card-body border">
-                        <vue-dropzone ref="myVueDropzone" id="dropzone" :options="dropzoneOptions"></vue-dropzone>
+
+                    <div class="px-4 py-2">
+                        <input type="file" id="file_input" class="" name="file[]" multiple="multiple"
+                               v-on:change="fileValidationCheck"
+                               accept="image/*">
+
+                        <br>
+                        <span class="text-danger">File extension must be jpg,png and upload size 1024KB</span>
                     </div>
+
+
+
+                    <!--                    <div class="card-body border">
+                                            <vue-dropzone  ref="myVueDropzone" id="dropzone" :options="dropzoneOptions"></vue-dropzone>
+                                        </div>-->
                 </div>
             </div>
 
@@ -55,16 +67,19 @@
                             </div>
                             <div class="col-md-8">
                                 <div class="form-group">
-                                    <label v-if="product_variant.length != 1" @click="product_variant.splice(index,1); checkVariant"
+                                    <label v-if="product_variant.length != 1"
+                                           @click="product_variant.splice(index,1); checkVariant"
                                            class="float-right text-primary"
                                            style="cursor: pointer;">Remove</label>
                                     <label v-else for="">.</label>
-                                    <input-tag v-model="item.tags" @input="checkVariant" class="form-control"></input-tag>
+                                    <input-tag v-model="item.tags" @input="checkVariant"
+                                               class="form-control"></input-tag>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="card-footer" v-if="product_variant.length < variants.length && product_variant.length < 3">
+                    <div class="card-footer"
+                         v-if="product_variant.length < variants.length && product_variant.length < 3">
                         <button @click="newVariant" class="btn btn-primary">Add another option</button>
                     </div>
 
@@ -142,8 +157,8 @@ export default {
                 maxFilesize: 0.5,
                 headers: {"My-Awesome-Header": "header value"}
             },
-            errors:'',
-            message:'',
+            errors: '',
+            message: '',
         }
     },
     methods: {
@@ -202,21 +217,56 @@ export default {
                 product_variant_prices: this.product_variant_prices
             }
 
-            axios.post('/product', product).then(response => {
+            var formData = new FormData();
+            var filesLength = document.getElementById('file_input').files.length;
+            for (var i = 0; i < filesLength; i++) {
+                formData.append("file[]", document.getElementById('file_input').files[i]);
+            }
+
+            formData.append('title', this.product_name);
+            formData.append('sku', this.product_sku);
+            formData.append('description', this.description);
+
+            formData.append('product_variant', JSON.stringify(this.product_variant));
+            formData.append('product_variant_prices', JSON.stringify(this.product_variant_prices));
+
+            axios.post('/product', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            }).then(response => {
                 this.message = response.data.msg;
 
                 this.product_name = '';
                 this.description = '';
                 this.images = '';
+
                 // this.product_variant = '';
                 // this.product_variant_prices = '';
 
             }).catch(error => {
-                if (error.response.data){
+                if (error.response.data) {
                     this.errors = error.response.data.errors;
                 }
             })
 
+        },
+
+
+        fileValidationCheck() {
+
+            var formData = new FormData();
+            var filesLength = document.getElementById('file_input').files.length;
+            for (var i = 0; i < filesLength; i++) {
+
+                var FileSize = document.getElementById('file_input').files[i].size / 1024 / 1024; // in MiB
+                if (FileSize > 1) {
+                    alert('File max size must be 1024KB');
+                    $("#file_input").val('');
+                    return false;
+                }
+
+            }
         }
 
 

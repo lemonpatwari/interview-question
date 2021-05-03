@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\ProductImage;
 use App\Models\ProductVariant;
 use App\Models\ProductVariantPrice;
 use App\Models\Variant;
 use App\QueryFilters\ProductFilter;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
@@ -49,12 +51,16 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
+        /*$productVariants = json_decode($request->product_variant, true);
+        dump(\Log::info(print_r($productVariants,true)));*/
+
         $request->validate([
             'title' => 'required|string',
             'sku' => 'required|string|unique:products',
             'description' => 'required|string',
-            'product_variant' => 'required|array',
-            'product_variant_prices' => 'required|array',
+            'product_variant' => 'required',
+            'product_variant_prices' => 'required',
+            'file.*' => 'required|image|max:1024',
         ]);
 
 
@@ -67,7 +73,22 @@ class ProductController extends Controller
                     'description' => $request->description,
                 ]);
 
-                $productVariants = $request->product_variant;
+                // ProductImage
+                $files = $request->file('file');
+                $imageData = [];
+                if ($files) {
+                    foreach ($files as $key => $file) {
+                        $imageData[] = [
+                            'file_path' => \Str::of($file->store('public/product'))->trim('public'),
+                            'product_id' => $product->id,
+                        ];
+                    }
+                }
+
+                ProductImage::insert($imageData);
+
+                //productVariants
+                $productVariants = json_decode($request->product_variant, true);
                 $productVariantData = [];
 
                 foreach ($productVariants as $productVariant) {
@@ -85,7 +106,7 @@ class ProductController extends Controller
                 ProductVariant::insert($productVariantData);
 
                 //productVariantPrices
-                $productVariantPrices = $request->product_variant_prices;
+                $productVariantPrices = json_decode($request->product_variant_prices, true);
                 $productVariantPricesData = [];
 
                 foreach ($productVariantPrices as $productVariantPrice) {
@@ -104,6 +125,7 @@ class ProductController extends Controller
 
                 }
                 ProductVariantPrice::insert($productVariantPricesData);
+
             });
 
         } catch (\Exception $e) {
@@ -138,7 +160,8 @@ class ProductController extends Controller
     {
         $product = Product::with(
             'productVariants',
-            'productVariants.variantDetails'
+            'productVariants.variantDetails',
+            'productImages'
         )->findOrFail($id);
 
         $variants = Variant::all();
@@ -156,7 +179,6 @@ class ProductController extends Controller
     public function update(Request $request, $id)
     {
 
-
         $request->validate([
             'title' => 'required|string',
             'sku' => 'required|string|unique:products,sku,' . $id,
@@ -164,7 +186,27 @@ class ProductController extends Controller
         ]);
 
         try {
-            Product::findOrFail($id)->update($request->all());
+
+            $product = Product::findOrFail($id)->update($request->all());
+
+            // ProductImage
+            $files = $request->file('file');
+
+            if ($files){
+                $imageData = [];
+                if ($files) {
+                    foreach ($files as $key => $file) {
+                        $imageData[] = [
+                            'file_path' => \Str::of($file->store('public/product'))->trim('public'),
+                            'product_id' => $id,
+                        ];
+                    }
+                }
+
+                ProductImage::whereProductId($id)->delete();
+
+                ProductImage::insert($imageData);
+            }
 
         } catch (\Exception $e) {
 
