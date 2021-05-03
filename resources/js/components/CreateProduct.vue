@@ -7,14 +7,20 @@
                         <div class="form-group">
                             <label for="">Product Name</label>
                             <input type="text" v-model="product_name" placeholder="Product Name" class="form-control">
+                            <small v-if="errors.title" class="text-danger with-errors"
+                                   v-html="errors.title[0]"></small>
                         </div>
                         <div class="form-group">
                             <label for="">Product SKU</label>
                             <input type="text" v-model="product_sku" placeholder="Product Name" class="form-control">
+                            <small v-if="errors.sku" class="text-danger with-errors"
+                                   v-html="errors.sku[0]"></small>
                         </div>
                         <div class="form-group">
                             <label for="">Description</label>
                             <textarea v-model="description" id="" cols="30" rows="4" class="form-control"></textarea>
+                            <small v-if="errors.description" class="text-danger with-errors"
+                                   v-html="errors.description[0]"></small>
                         </div>
                     </div>
                 </div>
@@ -86,10 +92,15 @@
                                 </tbody>
                             </table>
                         </div>
+
+                        <small v-if="errors.product_variant_prices" class="text-danger with-errors"
+                               v-html="errors.product_variant_prices[0]"></small>
                     </div>
                 </div>
             </div>
         </div>
+
+        {{ message }}
 
         <button @click="saveProduct" type="submit" class="btn btn-lg btn-primary">Save</button>
         <button type="button" class="btn btn-secondary btn-lg">Cancel</button>
@@ -130,7 +141,9 @@ export default {
                 thumbnailWidth: 150,
                 maxFilesize: 0.5,
                 headers: {"My-Awesome-Header": "header value"}
-            }
+            },
+            errors:'',
+            message:'',
         }
     },
     methods: {
@@ -179,6 +192,7 @@ export default {
 
         // store product into database
         saveProduct() {
+
             let product = {
                 title: this.product_name,
                 sku: this.product_sku,
@@ -188,14 +202,21 @@ export default {
                 product_variant_prices: this.product_variant_prices
             }
 
-
             axios.post('/product', product).then(response => {
-                console.log(response.data);
+                this.message = response.data.msg;
+
+                this.product_name = '';
+                this.description = '';
+                this.images = '';
+                // this.product_variant = '';
+                // this.product_variant_prices = '';
+
             }).catch(error => {
-                console.log(error);
+                if (error.response.data){
+                    this.errors = error.response.data.errors;
+                }
             })
 
-            console.log(product);
         }
 
 

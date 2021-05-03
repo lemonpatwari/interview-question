@@ -25,9 +25,9 @@ class ProductController extends Controller
             'productVariantPrice'
         )->filter($filter)->paginate(5);
 
-        $variants  = Variant::with('productVariants')->get();
+        $variants = Variant::with('productVariants')->get();
 
-        return view('products.index', compact('products','variants'));
+        return view('products.index', compact('products', 'variants'));
     }
 
     /**
@@ -35,8 +35,7 @@ class ProductController extends Controller
      *
      * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Http\Response|\Illuminate\View\View
      */
-    public
-    function create()
+    public function create()
     {
         $variants = Variant::all();
         return view('products.create', compact('variants'));
@@ -48,9 +47,72 @@ class ProductController extends Controller
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public
-    function store(Request $request)
+    public function store(Request $request)
     {
+        $request->validate([
+            'title' => 'required|string',
+            'sku' => 'required|string|unique:products',
+            'description' => 'required|string',
+            'product_variant' => 'required|array',
+            'product_variant_prices' => 'required|array',
+        ]);
+
+
+        try {
+
+            \DB::transaction(function () use ($request) {
+                $product = Product::create([
+                    'title' => $request->title,
+                    'sku' => $request->sku,
+                    'description' => $request->description,
+                ]);
+
+                $productVariants = $request->product_variant;
+                $productVariantData = [];
+
+                foreach ($productVariants as $productVariant) {
+
+                    foreach ($productVariant['tags'] as $key => $tag) {
+
+                        $productVariantData[] = [
+                            'variant' => $tag,
+                            'variant_id' => $productVariant['option'],
+                            'product_id' => $product->id,
+                        ];
+                    }
+
+                }
+                ProductVariant::insert($productVariantData);
+
+                //productVariantPrices
+                $productVariantPrices = $request->product_variant_prices;
+                $productVariantPricesData = [];
+
+                foreach ($productVariantPrices as $productVariantPrice) {
+
+                    $array = explode('/', $productVariantPrice['title']); // 0 = variant ,1 =variant , 2 = /
+                    $productVariant = ProductVariant::wherevariant($array[1])->first();
+
+                    $productVariantPricesData[] = [
+
+                        'product_variant_one' => $productVariant->variant_id,
+                        'price' => number_format($productVariant->price, 2),
+                        'stock' => number_format($productVariant->stock),
+                        'product_id' => $product->id,
+
+                    ];
+
+                }
+                ProductVariantPrice::insert($productVariantPricesData);
+            });
+
+        } catch (\Exception $e) {
+            \Log::emergency("File:" . $e->getFile() . "Line:" . $e->getLine() . "Message:" . $e->getMessage());
+            return response()->json(['msg' => 'something went wrong.'], 200);
+        }
+
+        return response()->json(['msg' => 'successfully created'], 200);
+
 
     }
 
@@ -61,8 +123,7 @@ class ProductController extends Controller
      * @param \App\Models\Product $product
      * @return \Illuminate\Http\Response
      */
-    public
-    function show($product)
+    public function show($product)
     {
 
     }
@@ -73,11 +134,16 @@ class ProductController extends Controller
      * @param \App\Models\Product $product
      * @return \Illuminate\Http\Response
      */
-    public
-    function edit(Product $product)
+    public function edit($id)
     {
+        $product = Product::with(
+            'productVariants',
+            'productVariants.variantDetails'
+        )->findOrFail($id);
+
         $variants = Variant::all();
-        return view('products.edit', compact('variants'));
+
+        return view('products.edit', compact('variants', 'product'));
     }
 
     /**
@@ -87,10 +153,27 @@ class ProductController extends Controller
      * @param \App\Models\Product $product
      * @return \Illuminate\Http\Response
      */
-    public
-    function update(Request $request, Product $product)
+    public function update(Request $request, $id)
     {
-        //
+
+
+        $request->validate([
+            'title' => 'required|string',
+            'sku' => 'required|string|unique:products,sku,' . $id,
+            'description' => 'required|string',
+        ]);
+
+        try {
+            Product::findOrFail($id)->update($request->all());
+
+        } catch (\Exception $e) {
+
+            \Log::emergency("File:" . $e->getFile() . "Line:" . $e->getLine() . "Message:" . $e->getMessage());
+            return response()->json(['msg' => 'something went wrong.'], 200);
+        }
+
+        return response()->json(['msg' => 'successfully updated'], 200);
+
     }
 
     /**
@@ -99,8 +182,7 @@ class ProductController extends Controller
      * @param \App\Models\Product $product
      * @return \Illuminate\Http\Response
      */
-    public
-    function destroy(Product $product)
+    public function destroy(Product $product)
     {
         //
     }
